@@ -1,26 +1,53 @@
 # encoding=#utf-8
 from controller import UserController
 from controller import ConfigController
+import time
 
 def setConfig(customerName):
     configController = ConfigController.ConfigController()
     config = configController.set(customerName)
+    config.customerName = customerName
     if (config.ledgerId == ''):
         raise RuntimeError("设置报文出错了")
-def createUser():
+    return config
+
+
+
+###SQL准备
+"""
+
+UPDATE user set id= left(concat(id,MD5(CURRENT_TIMESTAMP) ),12),name =  left(concat(name,MD5(CURRENT_TIMESTAMP) ),12);
+
+delete from user_info;
+insert into user_info(userId,customerName) select `user`.id,config.customerName from user,config;
+"""
+def configUnit():
+    config = setConfig("自己测试用的")
+def userReigstUnit():
+    config = setConfig("自己测试用的")
     userController = UserController.UserController()
-    try:
-        array = userController.getUserInfo()
-        for obj in array:
-           userController.baasCreateUser(obj.id,obj.name)
-    except Exception as e:
-        print(e)
-def issue():
+    userController.createUserList(config)
+
+def issueUnit():
+    userController = UserController.UserController()
+    list = userController.getUserInfo("自己测试用的")
+
+    bossAccount = userController.getBossAccount(list)
+    userAsset = userController.issue(bossAccount, 10000)
+
+def transferUnit():
     pass
-def transfer(src,to,account):
+def mulitiTransferUnit():
     pass
-def settle(src,account):
+
+def settleUnit():
     pass
-setConfig("自己测试用的")
-createUser()
+
+
+configUnit()
+userReigstUnit()
+issueUnit()
+transferUnit()
+
+
 

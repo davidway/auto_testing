@@ -1,4 +1,6 @@
 class UserAsset:
     userAddress=""
     assetAddress=""
-    status=""
+    status=0
+    money=""
+    sourceId=""

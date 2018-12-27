@@ -12,8 +12,7 @@ def safeRequests(url, data, headers, cookies):
             result = requests.post(url, data=data, headers=headers,cookies=cookies)
 
 
-            data = dump.dump_all(result)
-            print(data.decode('utf-8'))
+            print(result.json())
             return result
         except Exception as e:
             print(e)
@@ -55,7 +54,7 @@ def login(user, password):
     cookies = ""
     result = safeRequests(url, data, headers, cookies)
 
-    return result.cookies
+    return result
 
 
 def qiandao():
@@ -75,10 +74,12 @@ def useTool(account, password):
     headers = headers
     cookies = cookies
     result = safeRequests(url, data, headers, cookies)
+    return result
 
 
 def userQianDao(account, password):
-    cookies = login(account, password)
+    requests = login(account, password)
+    cookies = requests.cookies
     headers = {
 
         'Accept': "application/json, text/plain, */*",
@@ -90,14 +91,19 @@ def userQianDao(account, password):
     headers = headers
     cookies = cookies
     result = safeRequests(url, data, headers, cookies)
+    return result
+
 def clearCookies(requests):
     requests.cookies.clear()
 
 def job(account, password):
     requests = dig(account, password)
     clearCookies(requests)
-    useTool(account, password)
-    userQianDao(account, password)
+    requests = useTool(account, password)
+    clearCookies(requests)
+
+    requests = userQianDao(account, password)
+    clearCookies(requests)
 
     time.sleep(5)
 
