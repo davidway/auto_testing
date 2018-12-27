@@ -17,6 +17,7 @@ class ConfigDao(BaseDao.BaseDao):
         try:
             baseDao = BaseDao.BaseDao()
             result = baseDao.executeSql(sql, param)
+            result = result[0]
             config = Config.Config()
             config.createUserPrivateKey,config.createUserPublicKey,config.mchId,config.chainId,config.ledgerId,config.nodeId=result
             return config

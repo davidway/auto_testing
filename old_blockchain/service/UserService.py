@@ -26,10 +26,11 @@ class UserService:
         userJson = json.dumps(user)
 
         userDao = UserDao.UserDao
-        userDao.baasCreateUser(userJson)
+        userInfo = userDao.baasCreateUser(userJson)
+
 
     def findUserInfo(self):
-        userDao = UserDao.UserDao
+        userDao = UserDao.UserDao()
         array =[]
         array = userDao.findUserInfo()
         return array

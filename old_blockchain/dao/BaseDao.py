@@ -2,7 +2,7 @@
 from pymysql import connect
 class BaseDao:
 
-    def executeSql(self,sql, param):
+    def executeSql(self,sql, param=""):
         # 查询数据库的方法
         try:
             db = connect(host="localhost",
@@ -16,9 +16,12 @@ class BaseDao:
             # 使用cursor()方法获取操作游标
             sql = sql
             # sql语句
-            cur.execute(sql, param)
+            if param!="":
+                 cur.execute(sql, param)
+            else:
+                cur.execute(sql)
             # 执行sql语句
-            results = cur.fetchone()
+            results = cur.fetchall()
             # 获取查询的结果
             db.commit()
             # 提交

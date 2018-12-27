@@ -29,13 +29,16 @@ class UserDao(BaseDao.BaseDao):
         sql = """
               select id,name from user
           """
-
+        array=[]
         try:
             baseDao = BaseDao.BaseDao()
             result = baseDao.executeSql(sql)
-            user =User.User()
-            user.id,user.name = result
-            return user
+
+            for row in result:
+                user = User.User()
+                user.id,user.name = row
+                array.append(user)
+            return array
         except Exception as e:
             print(e)
 
