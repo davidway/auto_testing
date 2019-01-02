@@ -6,4 +6,5 @@ class TransferObject:
         feeAccount=""
         feeAmount=""
         userPrivateKey=""
-        state=0
+        amount=0
+        srcAsset=""

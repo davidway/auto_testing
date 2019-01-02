@@ -39,6 +39,17 @@ class UserService:
         array =[]
         array = userDao.findUserInfo(customerName)
         return array
+    def getBossAccount(self,customerName):
+        userDao = UserDao.UserDao()
+
+        user = userDao.getBossAccount(customerName)
+        return user;
+    def findUserInfoByAddress(self,address):
+        userDao = UserDao.UserDao()
+
+        userInfo = userDao.findUserInfoByAddress(address)
+        return userInfo
+
     def updateUserInfo(self,userInfo):
         userDao = UserDao.UserDao()
         userDao.update(userInfo)
@@ -48,44 +59,87 @@ class UserService:
         issueObject = IssueObject.IssueObject()
         issueObject.amount = amount
         issueObject.createUserAccountAddress=bossAccount.address
-        issueObject.sourceId = "qianyi"+str(datetime.datetime.now())
-        issueObject.content = "{\"wsy\":\"qianyiuse\"}"
-        issueObject.unit = "qianyi"
+        issueObject.sourceId = "wsy_qian_yi_zhuan_yong_bao_wen"
+        issueObject.content = "{\"wsy\":\"wsy_qian_yi_zhuan_yong_bao_wen\"}"
+        issueObject.unit = "wsy_qian_yi_zhuan_yong_bao_wen"
         jsonResult = userDao.issue(issueObject)
         userAsset = UserAsset.UserAsset()
         userAsset.assetAddress,userAsset.status,userAsset.userAddress,userAsset.money,userAsset.sourceId = jsonResult['assetId'],"0",bossAccount.address,amount,issueObject.sourceId
         return userAsset
 
-    def getBossAccount(self,list):
-        for obj in list:
-            if (obj.id.startswith("qianyibBos")):
-                return obj
+
 
     def insertUserAsset(slef,userAsset):
         userDao = UserDao.UserDao()
         userDao.insertUserAsset(userAsset)
         return userAsset
 
-    def transfer(self,src,to,fee,amount,feeAmount):
+    def transfer(self,transferObject):
         userDao = UserDao.UserDao()
-        transferObject = TransferObject.TransferObject()
-        userDao.transfer(transferObject)
-        pass
-    def settle(self):
+        src,to,fee = userDao.transfer(transferObject)
+        return src,to,fee
+
+    def settle(self,settleObject):
         userDao = UserDao.UserDao()
-        settleObject = SettleObject.TransferObject()
-        userDao.settle(settleObject)
-        pass
+        src = userDao.settle(settleObject)
+        return src
 
     def updateAsset(self,to):
         userDao = UserDao.UserDao()
-        usertAssetObject = UserAsset.UsertAsset()
-        userDao.updateAsset(usertAssetObject)
+        assetAddressArray = to.assetAddress.split(",")
+        for assetAddress in assetAddressArray:
+            to.assetAddress = assetAddress
+            usertAssetObject = UserAsset.UserAsset()
+            usertAssetObject = to
+            userDao.updateAsset(usertAssetObject)
         pass
-# userService = UserService()
-# baasAccount = UserInfo.UserInfo()
-# baasAccount.address="143zd1h2VTWmBdZPDbCV1Sh6hne1NxDSsV"
-# baasAccount.publicKey="Ato+pz0af0Kljx0Wv+cKu6jcCkN9Rmmg0oiC/VWebCQb"
-# baasAccount.privateKey="LsWZ5W3VbtCtIuZ1fYkhW4kT4UY30tu82YhSOC34Qg4="
-# userAsset = userService.issue(baasAccount,"1000")
-# userService.insertUserAsset(userAsset)
+
+    def findAssetId(self,userAddress):
+        userDao = UserDao.UserDao()
+        userAsset = UserAsset.UserAsset()
+        userAsset.userAddress= userAddress
+        userAssetArray = userDao.findAssetId(userAsset)
+        return userAssetArray
+def serviceTransferUnitTest():
+    transferObject = TransferObject.TransferObject()
+    transferObject.amount = 1
+    transferObject.srcAccount = "1Q85VHWRpbd8pqa8XC4pwNeEebTNkt3qJz"
+    transferObject.dstAccount = "1BYvJaTMV8ZFYsCbDCwZN8BaPyxeGqTA9E"
+    transferObject.feeAccount = "1FnftYRs1XsZNQrAATk1MeoWzzeHUVFavc"
+    transferObject.feeAmount = 1
+    transferObject.srcAsset="26aMqAWkn9iXu3fmax3FYjqZUC64UxiE5oyFKYuUci1C2Rb"
+    transferObject.userPrivateKey = "BvfwcVV+8QjEXwoMYbucZvLe4buAMP9OFCBn/wbl59s="
+    userService = UserService()
+    src,to,fee = userService.transfer(transferObject)
+    print (src.assetAddress,",to=",to.assetAddress,",fee=",fee.assetAddress)
+def updateAssetUnit(assetAddress,userAddress):
+    userService = UserService()
+    userAsset = UserAsset.UserAsset()
+    userAsset.status=1
+    userAsset.assetAddress=assetAddress
+    userAsset.userAddress=userAddress
+    userService.updateAsset(userAsset)
+def insertAssetUnit(assetAddress,userAddress,money):
+    userService = UserService()
+    userAsset = UserAsset.UserAsset()
+    userAsset.userAddress=userAddress
+    userAsset.assetAddress=assetAddress
+    userAsset.status=0
+    userAsset.money=money
+    userService.insertUserAsset(userAsset)
+# assetAddress=""
+# userAddress="1BYvJaTMV8ZFYsCbDCwZN8BaPyxeGqTA9E"
+# updateAssetUnit(assetAddress,userAddress)
+# assetAddress=""
+# userAddress="1FnftYRs1XsZNQrAATk1MeoWzzeHUVFavc"
+# updateAssetUnit(assetAddress,userAddress)
+#
+# assetAddress="27tSp9FHXasio7TK7bPhJuvEoVsiUHjJUMus9NLcbjtqCgz"
+# userAddress="1FnftYRs1XsZNQrAATk1MeoWzzeHUVFavc"
+# money =1
+# insertAssetUnit(assetAddress,userAddress)
+#
+# assetAddress="27tSp9FHXasio7TK7bPhJuvEoVsiUHjJUMus9NLcbjtqCgz"
+# userAddress="1BYvJaTMV8ZFYsCbDCwZN8BaPyxeGqTA9E"
+# money =1
+# insertAssetUnit(assetAddress,userAddress)
