@@ -1,26 +1,42 @@
-from service import UserService
+from service import NewUserService
 import time
 from model import UserAsset
 from model import UserInfo
-class UserController:
+from new_controller import NewConfigController
+from service import NewUserService
+from model import NewTransferObject
+from mylog import Log
+from model import NewSettleObject
+
+newUserControllerLog = Log.setup_logger("newUserControlelr","newUserController.log")
+
+class NewUserController:
+
+    def setConfig(self,customerName):
+        configController = NewConfigController.NewConfigController()
+        config = configController.set(customerName,1)
+        config.customerName = customerName
+        if (config.host == ''):
+            raise RuntimeError("设置报文出错了")
+        return config
 
     def getBossAccount(self,customerName):
-        userService = UserService.UserService()
+        newUserService = NewUserService.NewUserService()
         array = []
-        array = userService.getBossAccount(customerName)
+        array = newUserService.getBossAccount(customerName)
         return array
 
     def findUserInfoByAddress(self,address):
-        userService = UserService.UserService()
+        newUserService = NewUserService.NewUserService()
         array = []
-        user = userService.findUserInfoByAddress(address)
+        user = newUserService.findUserInfoByAddress(address)
         return user
 
 
     def getUserInfo(self,customerName):
-        userService = UserService.UserService()
+        newUserService = NewUserService.NewUserService()
         array = []
-        array = userService.findUserInfo(customerName)
+        array = newUserService.findUserInfo(customerName)
         return array
 
     def createUserList(self,config):
@@ -28,6 +44,7 @@ class UserController:
         try:
             bossAccount = {}
             array = self.getUserInfo(config.customerName)
+
             for obj in array:
                 try:
                     userInfo =  self.baasCreateUser(obj.id, obj.name)
@@ -36,42 +53,44 @@ class UserController:
                     time.sleep(1)
 
                 except Exception as e:
-                    print(e)
+                    print(e.with_traceback())
                     array.append(obj)
             return array
         except Exception as e:
-            print(e)
+            print(e.with_traceback())
 
     def baasCreateUser(self, id, name):
-        userService = UserService.UserService()
-        userInfo = userService.bassCreateUser(name, id)
+        newUserService = NewUserService.NewUserService()
+        userInfo = newUserService.bassCreateUser(name, id)
         return userInfo
 
     def updateUserInfo(self, userInfo, userId, customerName):
-        userService = UserService.UserService()
+        newUserService = NewUserService.NewUserService()
         userInfo.userId = userId
         userInfo.customerName = customerName
-        userService.updateUserInfo(userInfo)
+        newUserService.updateUserInfo(userInfo)
     def issue(self,bossAccount,amount):
-        userService = UserService.UserService()
-        userAsset = userService.issue(bossAccount,amount)
-        userAsset = userService.insertUserAsset(userAsset)
+        newUserService = NewUserService.NewUserService()
+        userAsset = newUserService.issue(bossAccount,amount)
+        userAsset = newUserService.insertUserAsset(userAsset)
         return userAsset
 
     def transfer(self,src,to,fee,srcmoney,transferObject):
-        userService = UserService.UserService()
+        newUserService = NewUserService.NewUserService()
         money = srcmoney
         amount = transferObject.amount
 
         feeAmount = transferObject.feeAmount
         print("transObject=",transferObject)
-        newSrc,newTo,newFee = userService.transfer(transferObject)
+        newSrc,newTo,newFee = newUserService.transfer(transferObject)
         srcAsset = UserAsset.UserAsset()
         toAsset = UserAsset.UserAsset()
         feeAsset = UserAsset.UserAsset()
 
         srcAsset.status = 1
         srcAsset.userAddress = transferObject.srcAccount
+
+
         srcAsset.assetAddress = transferObject.srcAsset
 
         toAsset.userAddress = transferObject.dstAccount
@@ -90,41 +109,40 @@ class UserController:
         if  fee!={}:
             fee.status=1
             fee.money = feeAmount
-        userService.updateAsset(srcAsset)
-        userService.insertUserAsset(newSrc)
-        userService.updateAsset(toAsset)
-        userService.insertUserAsset(newTo)
+        newUserService.updateAsset(srcAsset)
+        newUserService.insertUserAsset(newSrc)
+        newUserService.updateAsset(toAsset)
+        newUserService.insertUserAsset(newTo)
         if  fee!={}:
-             userService.updateAsset(feeAsset)
-        userService.insertUserAsset(newFee)
+            newUserService.updateAsset(feeAsset)
+        newUserService.insertUserAsset(newFee)
 
     def settle(self,settleObject):
-        userService = UserService.UserService()
+        newUserService = NewUserService.NewUserService()
         orgSrc = UserAsset.UserAsset()
         orgSrc.assetAddress = settleObject.srcAsset
         orgSrc.userAddress = settleObject.ownerAccount
 
 
-        newSrc = userService.settle(settleObject)
+        newSrc = newUserService.settle(settleObject)
         newSrc.money = -settleObject.amount
         orgSrc.status=1
-        userService.updateAsset(orgSrc)
-        userService.insertUserAsset(newSrc)
+        newUserService.updateAsset(orgSrc)
+        newUserService.insertUserAsset(newSrc)
 
     def findAssetId(self,srcAccount):
 
         userInfo = srcAccount
-        userService = UserService.UserService()
-        userAssetArray = userService.findAssetId(userInfo.address)
+        newUserService = NewUserService.NewUserService()
+        userAssetArray = newUserService.findAssetId(userInfo.address)
 
         return userAssetArray
 
     def checkAccount(self,list):
-        userService = UserService.UserService()
+        newUserService = NewUserService.NewUserService()
         for each in list:
-            sqlAccountCheck = userService.getUserAccountFromSql(each)
-            userAccountBaas = userService.getUserAccountFromBass(each)
+            sqlAccountCheck = newUserService.getUserAccountFromSql(each)
+            userAccountBaas = newUserService.getUserAccountFromBass(each)
             assert (sqlAccountCheck.money == userAccountBaas.money), "不正确，请查看资产地址："+each.address+",sqlAccountCheck.money="+str(sqlAccountCheck.money)+",userAccountBaas.money="+str(userAccountBaas.money)
             assert (sqlAccountCheck.assetAddress == userAccountBaas.assetAddress), "不正确，请查看资产地址："+each.address+",sqlAccountCheck.assetAddress="+sqlAccountCheck.assetAddress+",userAccountBaas.assetAddress="+userAccountBaas.assetAddress
-
 

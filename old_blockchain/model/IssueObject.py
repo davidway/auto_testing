@@ -1,8 +1,8 @@
 
 import datetime
 class IssueObject:
-    sourceId="qianyi",datetime.datetime.now()
-    content="{wsy:qianyiuse}"
+    sourceId=""
+    content=""
     amount=""
     createUserAccountAddress=""
-    unit="qianyi"
+    unit=""

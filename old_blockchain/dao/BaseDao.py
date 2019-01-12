@@ -2,8 +2,16 @@
 from pymysql import connect
 import time
 import requests
-class BaseDao:
 
+import logging
+from mylog import Log
+
+baseDaoLog = Log.setup_logger('baseDaoLog', 'baseDaoLog.log')
+
+
+
+class BaseDao:
+    logging.basicConfig(filename='basedao.log', level=logging.INFO)
     def safeRequests(self,url, data, headers, cookies):
         result = ""
         tryTimes = 0
@@ -32,6 +40,7 @@ class BaseDao:
             # 使用cursor()方法获取操作游标
             sql = sql
             # sql语句
+            logging.debug("sql=",sql,"param=",param)
             if param!="":
                  cur.execute(sql, param)
             else:
@@ -80,6 +89,7 @@ class BaseDao:
             # 断开数据库连接
             return results
         except Exception as e:
+            baseDaoLog.info("sql=",sql,",param=",param)
             print(e)
             db.rollback()
         # 返回一个list

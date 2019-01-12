@@ -19,7 +19,7 @@ host = globalConfig.host
 baseDao = BaseDao.BaseDao()
 
 
-class UserDao(BaseDao.BaseDao):
+class NewUserDao(BaseDao.BaseDao):
     def findUserInfo(self, customerName):
         sql = """
                select id,name,address,publicKey,privateKey from user a left join user_info b  on a.id = b.userId  where customerName = %s

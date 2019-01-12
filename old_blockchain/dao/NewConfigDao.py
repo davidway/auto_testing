@@ -3,28 +3,29 @@
 from dao import BaseDao
 import json
 
-from model import Config, NewConfig
+from model import NewConfig
 from model import GLOBAL_CONFIG
 globalConfig = GLOBAL_CONFIG.GLOBAL_CONFIG()
 host = globalConfig.host
 
-class ConfigDao(BaseDao.BaseDao):
-    def get(self, config):
-        if config.customerName=="":
+class NewConfigDao(BaseDao.BaseDao):
+    def get(self, newConfig):
+        if newConfig.customerName=="":
             raise RuntimeError('出错了')
 
         sql = """
-            select privateKey,publicKey,mchId,chainId,ledgerId,nodeId from config where customerName=%s
+select createUserPrivateKey,createUserPublicKey,mchId,chainId,nodeId,host from new_config where customerName=%s and isTest=%s
         """
         param = []
-        param.append(config.customerName)
+        param.append(newConfig.customerName)
+        param.append(newConfig.isTest)
         try:
             baseDao = BaseDao.BaseDao()
             result = baseDao.executeGetAllSql(sql, param)
             result = result[0]
-            config = Config.Config()
-            config.createUserPrivateKey,config.createUserPublicKey,config.mchId,config.chainId,config.ledgerId,config.nodeId=result
-            return config
+            newConfig = NewConfig.NewConfig()
+            newConfig.createUserPrivateKey,newConfig.createUserPublicKey,newConfig.mchId,newConfig.chainId,newConfig.nodeId,newConfig.host=result
+            return newConfig
         except Exception as e:
             print(e)
 
@@ -37,13 +38,13 @@ class ConfigDao(BaseDao.BaseDao):
         try:
             baseDao = BaseDao.BaseDao()
 
-            config = NewConfig.NewConfig()
-            config.customerName = customerName
-            configDao = ConfigDao()
-            config = configDao.get(config)
+            newConfig = NewConfig.NewConfig()
+            newConfig.customerName = customerName
+            newConfigDao = NewConfigDao()
+            newConfig = newConfigDao.get(newConfig)
 
-            config = config.__dict__
-            configJson = json.dumps(config)
+            newConfig = newConfig.__dict__
+            configJson = json.dumps(newConfig)
 
             # 打印字典
             print(config)
@@ -65,7 +66,7 @@ class ConfigDao(BaseDao.BaseDao):
         except Exception as e:
             print(e)
 
-    def setNewBassByCustomerName(self,customerName):
+    def setNewBassByCustomerName(self,customerName,isTest):
         headers = {
             'Accept': "application/json",
             'Content-Type': "application/json;charset=UTF-8"
@@ -74,10 +75,11 @@ class ConfigDao(BaseDao.BaseDao):
         try:
             baseDao = BaseDao.BaseDao()
 
-            config = Config.Config()
-            config.customerName = customerName
-            configDao = ConfigDao()
-            config = configDao.get(config)
+            newConfig = NewConfig.NewConfig()
+            newConfig.customerName = customerName
+            newConfig.isTest= isTest
+            configDao = NewConfigDao()
+            config = configDao.get(newConfig)
 
             config = config.__dict__
             configJson = json.dumps(config)

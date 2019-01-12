@@ -18,44 +18,34 @@ insert into user_info(userId,customerName) select `user`.id,config.customerName 
 
 
 def setConfig(customerName):
-    configController = ConfigController.ConfigController()
+    configController = NewConfigController.NewConfigController()
     config = configController.set(customerName)
     config.customerName = customerName
     if (config.ledgerId == ''):
         raise RuntimeError("设置报文出错了")
     return config
-
 def userReigstUnit(customerName):
     config = setConfig(customerName)
-    userController = UserController.UserController()
+    userController = NewUserController.NewUserController()
     userController.createUserList(config)
 
 def issueTest(bossAccount,amount,customerName):
-    config = setConfig(customerName)
-    userController = UserController.UserController()
+
+    userController = NewUserController.NewUserController()
     userController.issue(bossAccount, amount)
     pass
 
-def transferToAllTest(customerName,amount,feeAmount):
+def transferToAllTest(customerName,array,amount,feeAmount):
     try:
-        userController = UserController.UserController()
+        userController = NewUserController.NewUserController()
         list = userController.getUserInfo(customerName)
 
         src = userController.getBossAccount( customerName)
-        for i in range(list.__len__()):
-            print("i=", i, ",item=", list.__getitem__(i).__getattribute__("id"))
-            idStr = list.__getitem__(i).__getattribute__("id")
-            if ( idStr.startswith("qianyibBos")==True ):
-                continue
-            if i % 2 == 0:
-                to = {}
-                fee = {}
-            if i%2==0:
-                to = list.__getitem__(i)
-            if i%2==1:
-                fee = list.__getitem__(i)
+        for each in array:
+            to = list.__getitem__(each[0])
+            fee =  list.__getitem__(each[1])
             if (to != {} and fee != {}):
-                print(i, ",to=", to.__getattribute__("id"), "fee", fee.__getattribute__("id"), ",i=", i)
+
                 userAsset = UserAsset.UserAsset()
                 userAssetArray = userController.findAssetId(src)
                 assetAddressArray = ""
@@ -63,7 +53,7 @@ def transferToAllTest(customerName,amount,feeAmount):
                 for each in userAssetArray:
                     money = int(money) + each.money
                     assetAddressArray = assetAddressArray + each.assetAddress
-                transferObject = TransferObject.TransferObject()
+                transferObject = NewTransferObject.NewTransferObject()
                 transferObject.srcAccount = src.address
                 transferObject.dstAccount = to.address
                 transferObject.feeAccount = fee.address
@@ -71,22 +61,23 @@ def transferToAllTest(customerName,amount,feeAmount):
                 transferObject.feeAmount = feeAmount
                 transferObject.srcAsset = assetAddressArray
                 transferObject.userPrivateKey = src.privateKey
-                userController = UserController.UserController()
+                userController = NewUserController.NewUserController()
                 src_money = money
                 userController.transfer(src, to, fee, src_money, transferObject)
+        userController.checkAccount(list)
     except Exception as e:
         print(e)
-#transferToAllTest("演示环境账本",8,8)
 def settleTest(address,amount):
-    userController = UserController.UserController()
+    userController = NewUserController.NewUserController()
     userInfo = UserInfo.UserInfo()
 
-
-    settleObject =SettleObject.SettleObject()
+    list=[]
+    settleObject =NewSettleObject.NewSettleObject()
     settleObject.amount = amount
     settleObject.ownerAccount = address
 
     userInfo = userController.findUserInfoByAddress(settleObject.ownerAccount)
+    list.append(userInfo)
     settleObject.userPrivateKey = userInfo.privateKey
     userAssetArray = userController.findAssetId(userInfo)
     userAssetStr = ""
@@ -99,8 +90,11 @@ def settleTest(address,amount):
             userAssetStr = userAssetStr+"," + each.assetAddress
     settleObject.srcAsset = userAssetStr
     userController.settle(settleObject)
+
+
+
 def transferUser(src,to,fee,amount,feeAmount):
-    userController = UserController.UserController
+    userController = NewUserController.NewUserController()
     userAsset = UserAsset.UserAsset()
     userAssetArray = userController.findAssetId(src)
     assetAddressArray = ""
@@ -108,7 +102,7 @@ def transferUser(src,to,fee,amount,feeAmount):
     for each in userAssetArray:
         money = int(money) + each.money
         assetAddressArray = assetAddressArray + each.assetAddress
-    transferObject = TransferObject.TransferObject()
+    transferObject = NewTransferObject.NewTransferObject()
     transferObject.srcAccount = src.address
     transferObject.dstAccount = to.address
     transferObject.feeAccount = fee.address
@@ -116,49 +110,27 @@ def transferUser(src,to,fee,amount,feeAmount):
     transferObject.feeAmount = feeAmount
     transferObject.srcAsset = assetAddressArray
     transferObject.userPrivateKey = src.privateKey
-    userController = UserController.UserController()
+    userController = NewUserController.NewUserController()
     src_money = money
     userController.transfer(src, to, fee, src_money, transferObject)
 
-def issueUnit():
-    customerName = "演示环境账本"
-    bossAccount = {}
-    userController = UserController.UserController()
-    list = userController.getUserInfo(customerName)
-    bossAccount = userController.getBossAccount(customerName)
-    issueTest(bossAccount,1000,customerName)
 
-#issueUnit()
 
-def transferToAllUnit():
-    customerName = "演示环境账本"
-    transferToAllTest(customerName,8,8)
-#transferToAllUnit()
-def eachTransferToOther(customerName,amount,feeAmount):
+
+def eachTransferToOther(customerName,array,amount,feeAmount):
     try:
-        userController = UserController.UserController()
+        userController = NewUserController.NewUserController()
         list = userController.getUserInfo(customerName)
-
         src = {}
         to = {}
         fee = {}
         first = True
-        for i in range(3,list.__len__()):
-            print("i=", i, ",item=", list.__getitem__(i).__getattribute__("id"))
-            idStr = list.__getitem__(i).__getattribute__("id")
-
-            if i % 3 == 0:
-                src = {}
-                to = {}
-                fee={}
-            if i%3==0:
-                src = list.__getitem__(i)
-            if i%3==1:
-                to = list.__getitem__(i)
-            if i%3==2:
-                fee = list.__getitem__(i)
+        for each in array:
+            first = True
+            src =list.__getitem__(each[0])
+            to =list.__getitem__(each[1])
+            fee =list.__getitem__(each[2])
             if (to != {} and src!= {} and fee!={}):
-                print(i, ",src=", src.__getattribute__("id"), "to", to.__getattribute__("id"), ",i=", i)
                 userAsset = UserAsset.UserAsset()
                 userAssetArray = userController.findAssetId(src)
                 assetAddressArray = ""
@@ -170,7 +142,7 @@ def eachTransferToOther(customerName,amount,feeAmount):
                         first= False
                     elif first==False:
                         assetAddressArray = assetAddressArray +","+ each.assetAddress
-                transferObject = TransferObject.TransferObject()
+                transferObject = NewTransferObject.NewTransferObject()
                 transferObject.srcAccount = src.address
                 transferObject.dstAccount = to.address
                 if fee!={}:
@@ -180,11 +152,40 @@ def eachTransferToOther(customerName,amount,feeAmount):
                     transferObject.feeAmount = feeAmount
                 transferObject.srcAsset = assetAddressArray
                 transferObject.userPrivateKey = src.privateKey
-                userController = UserController.UserController()
+                userController = NewUserController.NewUserController()
                 src_money = money
                 userController.transfer(src, to, fee, src_money, transferObject)
-
+                settleTest(src.address,1)
+                settleTest(to.address, 1)
+                settleTest(fee.address, 1)
+        userController.checkAccount(list)
     except Exception as e:
         e = e.with_traceback()
         print(e)
-eachTransferToOther("演示环境账本",1,1)
+
+
+def issueUnit(customerName):
+    bossAccount = {}
+    setConfig(customerName)
+    userController = NewUserController.NewUserController()
+    list = userController.getUserInfo(customerName)
+    bossAccount = userController.getBossAccount(customerName)
+    issueTest(bossAccount,1000000000,customerName)
+
+def accountCheck(customerName):
+    setConfig(customerName)
+    userController = NewUserController.NewUserController()
+    list = userController.getUserInfo(customerName)
+    userController.checkAccount(list)
+
+
+customerName = "土豆链"
+issueUnit(customerName)
+
+transferToEachOtherArray = [(0, 1, 2), (1, 0, 2), (2, 3, 4), (3, 2, 4), (4, 5, 6), (5, 4, 6), (6, 7, 8), (7, 6, 8),
+                                (8, 9, 7), (9, 8, 7)]
+transferToAllArray=[(1,2),(3,4),(5,6),(7,8),(0,1),(8,9)]
+
+transferToAllTest(customerName,transferToAllArray,8,8)
+eachTransferToOther(customerName,transferToEachOtherArray,1,1)
+

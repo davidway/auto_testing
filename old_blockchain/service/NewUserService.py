@@ -6,7 +6,7 @@ import json
 from model import UserInfo
 from dao import UserDao
 from model import UserInfo
-from model import IssueObject
+from model import NewIssueObject
 from model import UserAccountCheck
 from model import TransferObject
 from model import SettleObject
@@ -16,7 +16,7 @@ import requests
 import time
 
 
-class UserService:
+class NewUserService:
 
     def bassCreateUser(self,username,userId):
         user = UserInfo.UserInfo()
@@ -57,8 +57,11 @@ class UserService:
 
     def issue(self,bossAccount,amount):
         userDao = UserDao.UserDao()
-        issueObject = IssueObject.IssueObject()
+        issueObject = NewIssueObject.NewIssueObject()
         issueObject.amount = amount
+        issueObject.userId = bossAccount.id
+        issueObject.userPrivateKey = bossAccount.privateKey
+        issueObject.userPublicKey = bossAccount.publicKey
         issueObject.createUserAccountAddress=bossAccount.address
         issueObject.sourceId = "wsy_qian_yi_zhuan_yong_bao_wen"
         issueObject.content = "{\"wsy\":\"wsy_qian_yi_zhuan_yong_bao_wen\"}"
@@ -68,19 +71,7 @@ class UserService:
         userAsset.assetAddress,userAsset.status,userAsset.userAddress,userAsset.money,userAsset.sourceId = jsonResult['assetId'],"0",bossAccount.address,amount,issueObject.sourceId
         return userAsset
 
-    def newIssue(self,bossAccount,amount):
-        userDao = UserDao.UserDao()
-        issueObject = IssueObject.IssueObject()
-        issueObject.amount = amount
-        issueObject.createUserAccountAddress = bossAccount.address
-        issueObject.sourceId = "wsy_qian_yi_zhuan_yong_bao_wen"
-        issueObject.content = "{\"wsy\":\"wsy_qian_yi_zhuan_yong_bao_wen\"}"
-        issueObject.unit = "wsy_qian_yi_zhuan_yong_bao_wen"
-        jsonResult = userDao.issue(issueObject)
-        userAsset = UserAsset.UserAsset()
-        userAsset.assetAddress, userAsset.status, userAsset.userAddress, userAsset.money, userAsset.sourceId = \
-        jsonResult['assetId'], "0", bossAccount.address, amount, issueObject.sourceId
-        return userAsset
+
 
 
     def insertUserAsset(slef,userAsset):
@@ -131,5 +122,4 @@ class UserService:
         userAccountCheck.assetAddress = list(userAccountCheck.assetAddress.split(","))
         userAccountCheck.assetAddress.sort()
         return userAccountCheck
-
 
