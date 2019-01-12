@@ -136,6 +136,7 @@ def main():
              "13676247140": "888888zjh", "15016885067": "ps9292ps", "13751386481": "qazwsx123456",
              "13929458901": "hefangju0901", "18319016923": "zhang169233", "13539739236": "love120834064",
              "13560848705": "WH900808"}
+    print("hello world")
     for name, password in array.items():
         with Pool() as pool:
              pool.starmap(job, [(name,password)])
